@@ -2,16 +2,14 @@
 using Dapper;
 using System.Data;
 
-// --- 1. CONFIGURATION ---
+// --- CONFIGURATION ---
 string connectionString = @"Server=ARSENROG;Database=TestDb;Trusted_Connection=True;TrustServerCertificate=True;";
 
 Console.WriteLine(">>>Connecting to database..");
 
-// --- 2. THE MODEL ---
-// This class matches the 'dbo.test' table
 
 
-// --- 3. THE LOGIC ---
+// --- THE LOGIC ---
 using (IDbConnection db = new SqlConnection(connectionString))
 {
     try
@@ -19,56 +17,57 @@ using (IDbConnection db = new SqlConnection(connectionString))
         // --- SCENARIO 1 ----
         // Fetching tests with Chrome browser
 
-        // string browserChrome = "chrome";
-        // var testsWithChrome = SqlUtilities.GetTestDataByBrowser(db, browserChrome);
-        // Console.WriteLine($"Found {testsWithChrome.Count} tests with {browserChrome}...");
+        string browserChrome = "chrome";
+        var testsWithChrome = SqlUtilities.GetTestDataByBrowser(db, browserChrome);
+        Console.WriteLine($"Found {testsWithChrome.Count} tests with {browserChrome}...");
 
         /*
         REPLACE CODE
+        */
         long newAuthorId = 32;
+
+
+        string updateSql = "UPDATE dbo.test SET author_id = @newId WHERE id = @testId";
+
+        foreach (var t in testsWithChrome)
+        {
+            db.Execute(updateSql, new { newId = newAuthorId, testId = t.Id });
+        }
+
+        /*
+        Select all tests performed on Firefox, 
+        copy their contents excluding ‘ID’ and ‘browser’. 
+        Add new tests with this content to the database. Browser - Safari
         */
 
-        // string updateSql = "UPDATE dbo.test SET author_id = @newId WHERE id = @testId";
+        string browserFirefox = "firefox";
+        var testsWithFirefox = SqlUtilities.GetTestDataByBrowser(db, browserFirefox);
+        Console.WriteLine($"Found {testsWithFirefox.Count} tests with {browserFirefox}...");
+        string insertSql = "INSERT INTO dbo.test (name, status_id, method_name, project_id, session_id, start_time, end_time, env, browser, author_id) VALUES (@Name, @StatusId, @MethodName, @ProjectId, @SessionId, @StartTime, @EndTime, @Env, @Browser, @AuthorId)";
+        foreach (var item in testsWithFirefox)
+        {
+            db.Execute(insertSql, new { Name = item.Name, StatusId = item.StatusId, MethodName = item.MethodName, ProjectId = item.ProjectId, SessionId = item.SessionId, StartTime = item.StartTime, EndTime = item.EndTime, Env = item.Env, Browser = "safari", AuthorId = item.AuthorId });
+        }
 
-        // foreach (var t in testsWithChrome)
-        // {
-        //     db.Execute(updateSql, new { newId = newAuthorId, testId = t.Id });
-        // }
+        string browserSafari = "safari";
+        var testsWithSafari = SqlUtilities.GetTestDataByBrowser(db, browserSafari);
+        Console.WriteLine($"Found {testsWithSafari.Count} tests with {browserSafari}...");
 
-
-        // Select all tests performed on Firefox, 
-        // copy their contents excluding ‘ID’ and ‘browser’. 
-        // Add new tests with this content to the database. Browser - Safari
-
-
-        // string browserFirefox = "firefox";
-        // var testsWithFirefox = SqlUtilities.GetTestDataByBrowser(db, browserFirefox);
-        // Console.WriteLine($"Found {testsWithFirefox.Count} tests with {browserFirefox}...");
-        // string insertSql = "INSERT INTO dbo.test (name, status_id, method_name, project_id, session_id, start_time, end_time, env, browser, author_id) VALUES (@Name, @StatusId, @MethodName, @ProjectId, @SessionId, @StartTime, @EndTime, @Env, @Browser, @AuthorId)";
-        // foreach (var item in testsWithFirefox)
-        // {
-        //     db.Execute(insertSql, new { Name = item.Name, StatusId = item.StatusId, MethodName = item.MethodName, ProjectId = item.ProjectId, SessionId = item.SessionId, StartTime = item.StartTime, EndTime = item.EndTime, Env = item.Env, Browser = "safari", AuthorId = item.AuthorId });
-        // }
-
-        // string browserSafari = "safari";
-        // var testsWithSafari = SqlUtilities.GetTestDataByBrowser(db, browserSafari);
-        // Console.WriteLine($"Found {testsWithSafari.Count} tests with {browserSafari}...");
-
-        // string deleteFromTestSql = "DELETE FROM dbo.test WHERE id = @Id";
-        // foreach (var item in testsWithSafari)
-        // {
-        //     if (item.AuthorId == null)
-        //     {
-        //         db.Execute(deleteFromTestSql, new { Id = item.Id });
-        //     }
-        // }
+        string deleteFromTestSql = "DELETE FROM dbo.test WHERE id = @Id";
+        foreach (var item in testsWithSafari)
+        {
+            if (item.AuthorId == null)
+            {
+                db.Execute(deleteFromTestSql, new { Id = item.Id });
+            }
+        }
 
 
         // // --- DELETE NEWLY ADDED AUTHOR AND HIS TESTS---
-        // string deleteFromTestByNewAuthor = "DELETE FROM dbo.test WHERE author_id = 32;";
-        // db.Execute(deleteFromTestByNewAuthor);
-        // string deleteFromAuthorSql = "DELETE FROM dbo.author WHERE name = 'ArsenB'";
-        // db.Execute(deleteFromAuthorSql);
+        string deleteFromTestByNewAuthor = "DELETE FROM dbo.test WHERE author_id = 32;";
+        db.Execute(deleteFromTestByNewAuthor);
+        string deleteFromAuthorSql = "DELETE FROM dbo.author WHERE name = 'ArsenB'";
+        db.Execute(deleteFromAuthorSql);
 
         // --- SCENARIO 2 ----
 
@@ -78,13 +77,13 @@ using (IDbConnection db = new SqlConnection(connectionString))
         - Add new project to ‘project’ table.
         */
 
-        // var columnNames = new List<string>() { "name", "login", "email" };
-        // string newAuthorLogin = "newlogin";
-        // var values = new List<object>() { "newName", newAuthorLogin, "new@email.com" };
-        // SqlUtilities.InsertRecord(db, "dbo.author", columnNames, values);
+        var columnNames = new List<string>() { "name", "login", "email" };
+        string newAuthorLogin = "newlogin";
+        var values = new List<object>() { "newName", newAuthorLogin, "new@email.com" };
+        SqlUtilities.InsertRecord(db, "dbo.author", columnNames, values);
 
-        // string newProjectName = "__newProject";
-        // SqlUtilities.InsertRecord(db, "dbo.project", new List<string> { "name" }, new List<object> { newProjectName });
+        string newProjectName = "__newProject";
+        SqlUtilities.InsertRecord(db, "dbo.project", new List<string> { "name" }, new List<object> { newProjectName });
 
 
         /*
@@ -98,22 +97,22 @@ using (IDbConnection db = new SqlConnection(connectionString))
         ‘env’ was changed
         */
 
-        // var newAuthorIdNumber = db.ExecuteScalar<int>("SELECT id FROM dbo.author WHERE login = @newAuthorLogin", new { newAuthorLogin = newAuthorLogin });
-        // var newProjectIdNumber = db.ExecuteScalar<int>("SELECT id FROM dbo.project WHERE name = @newProjectName", new { newProjectName = newProjectName });
+        var newAuthorIdNumber = db.ExecuteScalar<int>("SELECT id FROM dbo.author WHERE login = @newAuthorLogin", new { newAuthorLogin = newAuthorLogin });
+        var newProjectIdNumber = db.ExecuteScalar<int>("SELECT id FROM dbo.project WHERE name = @newProjectName", new { newProjectName = newProjectName });
 
 
-        // var columnNamesList = new List<string>() { "name", "status_id", "method_name", "project_id", "session_id", "start_time", "end_time", "env", "browser", "author_id" };
+        var columnNamesList = new List<string>() { "name", "status_id", "method_name", "project_id", "session_id", "start_time", "end_time", "env", "browser", "author_id" };
 
 
-        // foreach (var item in testsWithChrome)
-        // {
-        //     SqlUtilities.InsertRecord(
-        //         db,
-        //         "dbo.test",
-        //         columnNamesList,
-        //         new List<object>() { item.Name, item.StatusId, item.MethodName, newProjectIdNumber, item.SessionId, item.StartTime, item.EndTime, "_NEW_Env", item.Browser, newAuthorIdNumber }
-        //         );
-        // }
+        foreach (var item in testsWithChrome)
+        {
+            SqlUtilities.InsertRecord(
+                db,
+                "dbo.test",
+                columnNamesList,
+                new List<object>() { item.Name, item.StatusId, item.MethodName, newProjectIdNumber, item.SessionId, item.StartTime, item.EndTime, "_NEW_Env", item.Browser, newAuthorIdNumber }
+                );
+        }
 
 
         /*
@@ -121,8 +120,8 @@ using (IDbConnection db = new SqlConnection(connectionString))
         EXPECTED RESULT:
         ‘Status’ was changed
         */
-        // string changeStatusSql = "UPDATE dbo.test SET status_id = 2 WHERE status_id = 3";
-        // db.Execute(changeStatusSql);
+        string changeStatusSql = "UPDATE dbo.test SET status_id = 2 WHERE status_id = 3";
+        db.Execute(changeStatusSql);
 
 
 
@@ -134,6 +133,8 @@ using (IDbConnection db = new SqlConnection(connectionString))
 }
 
 
+// --- THE MODEL ---
+// This class matches the 'dbo.test' table
 public class Test
 {
     public long Id { get; set; }
@@ -149,12 +150,8 @@ public class Test
     public long? AuthorId { get; set; }
 }
 
-// public class Project
-// {
-//     public long Id { get; set; }
-//     public required string Name { get; set; }
-// }
 
+// --- THE SQL UTILITIES ---
 public static class SqlUtilities
 {
     public static List<Test> GetTestDataByBrowser(IDbConnection db, string browser)
