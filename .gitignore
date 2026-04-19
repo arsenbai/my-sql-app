@@ -1,0 +1,39 @@
+# Build folders
+bin/
+obj/
+
+# Visual Studio / Rider / VS Code user files
+.vs/
+.idea/
+.vscode/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# NuGet packages (if local packages folder exists)
+packages/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test / coverage output
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# Publish output
+publish/
+
+# Secrets / local config
+appsettings.Development.json
+secrets.json
+.env
