@@ -24,8 +24,8 @@ The project is intentionally simple and educational.
 Fork this repository to your own GitHub account and clone it locally:
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
+git clone https://github.com/arsenbai/my-sql-app.git
+cd my-sql-app
 ```
 
 ### Step 1: Restore dependencies
@@ -36,7 +36,7 @@ dotnet restore
 
 ### Step 2: Create the database
 Create a SQL Server database named:
-`<TestDb>`
+`TestDb`
 
 #### ✅ Optional:
 You may use a different database name, but if you do, make sure to update the connection string in:
