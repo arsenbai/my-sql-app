@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MySqlApp": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DB_NAME": "TestDb"
+      }
+    }
+  }
+}
