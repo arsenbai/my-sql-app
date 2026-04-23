@@ -3,7 +3,8 @@
     "MySqlApp": {
       "commandName": "Project",
       "environmentVariables": {
-        "DB_NAME": "TestDb"
+        "DB_NAME": "TestDb",
+        "SERVER_NAME": "CMDB-224899"
       }
     }
   }
