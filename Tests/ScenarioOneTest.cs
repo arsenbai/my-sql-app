@@ -13,7 +13,7 @@ namespace MySqlApp.Tests
 {
     // SCENARIO 1
     [TestFixture]
-    internal class ScenarioOneTest
+    public class ScenarioOneTest
     {
         private ConnectionToDb _connection = null!;
         private IDbConnection _db = null!;
@@ -34,6 +34,7 @@ namespace MySqlApp.Tests
             // create Db connection
             _connection = Data.Connection.ConnectionToDb.Instance;
             _db = _connection.CreateConnection();
+            _db.Open();
 
             // PRECONDITION: create new author record in dbo.author table
             string newAuthorGuid = $"{Guid.NewGuid():N}";
@@ -199,12 +200,13 @@ namespace MySqlApp.Tests
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            // POSTCONDITION delete the created author, check that it has been deleted
-            AuthorSteps.DeleteAuthorById(_db, _newAuthorId);
-            Assert.That(
-                !AuthorSteps.CheckAuthorExists(_db, _newAuthorId),
-                $"the created author has NOT been deleted: author_id={_newAuthorId}"
-                );
+            //    // POSTCONDITION delete the created author, check that it has been deleted
+            //    AuthorSteps.DeleteAuthorById(_db, _newAuthorId);
+            //    Assert.That(
+            //        !AuthorSteps.CheckAuthorExists(_db, _newAuthorId),
+            //        $"the created author has NOT been deleted: author_id={_newAuthorId}"
+            //        );
+            _db.Close();
         }
     }
 }

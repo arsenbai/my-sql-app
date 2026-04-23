@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MySqlApp.Tests
 {
-    internal class ScenarioTwoTest
+    public class ScenarioTwoTest
     {
         // todo: add test scenario 2
     }
