@@ -16,8 +16,8 @@ namespace MySqlApp.Data.Connection
         private ConnectionToDb()
         {
             // --- CONFIGURATION ---
-            string SERVER_NAME = Environment.GetEnvironmentVariable("SERVER_NAME");
-            string DB_NAME = Environment.GetEnvironmentVariable("DB_NAME");
+            string SERVER_NAME = "CMDB-224899";
+            string DB_NAME = "TestDb";
 
             if (string.IsNullOrWhiteSpace(SERVER_NAME))
             { 
@@ -47,10 +47,6 @@ namespace MySqlApp.Data.Connection
             }
         }
 
-        public string GetConnectionString()
-        {
-            return _connectionString;
-        }
 
         public IDbConnection CreateConnection()
         {
