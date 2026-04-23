@@ -13,10 +13,16 @@ namespace MySqlApp.Steps
     {
         internal static void InsertAuthor(IDbConnection db, string newAuthorName, string newAuthorLogin, string newAuthorEmail)
         {
-            string insertSql = Utils.SqlLoader.Load("InsertAuthor.sql");
-            db.Execute(
-                insertSql,
-                new { Name = newAuthorName, Login = newAuthorLogin, Email = newAuthorEmail});
+            using (var transaction = db.BeginTransaction())
+            { 
+                string insertSql = Utils.SqlLoader.Load("InsertAuthor.sql");
+                var rowsAffected = db.Execute(
+                    insertSql,
+                    new { Name = newAuthorName, Login = newAuthorLogin, Email = newAuthorEmail},
+                    transaction: transaction);
+                transaction.Commit();
+                Console.WriteLine($"{rowsAffected} rows inserted.");
+            }
         }
 
         internal static Author? GetAuthorById(IDbConnection db, long id)
@@ -37,10 +43,15 @@ namespace MySqlApp.Steps
 
         internal static void DeleteAuthorById(IDbConnection db, long targetAuthorId)
         {
-            string deleteAuthorByIdSql = Utils.SqlLoader.Load("DeleteAuthorById.sql");
-            db.Execute(
-                deleteAuthorByIdSql,
-                new { TargetAuthorId = targetAuthorId });
+            using (var transaction = db.BeginTransaction())
+            { 
+                string deleteAuthorByIdSql = Utils.SqlLoader.Load("DeleteAuthorById.sql");
+                db.Execute(
+                    deleteAuthorByIdSql,
+                    new { TargetAuthorId = targetAuthorId },
+                    transaction: transaction);
+                transaction.Commit();
+            }
         }
 
         internal static bool CheckAuthorExists(IDbConnection db, long id)

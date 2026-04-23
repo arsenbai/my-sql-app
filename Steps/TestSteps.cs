@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using System.Transactions;
 
 namespace MySqlApp.Steps
 {
@@ -21,20 +22,26 @@ namespace MySqlApp.Steps
                                         string? browser,
                                         long? authorId)
         {
-            string insertSql = Utils.SqlLoader.Load("InsertTest.sql");
-            long newlyAddedId = db.ExecuteScalar<long>(
-            insertSql,
-            new { Name = name, 
-                StatusId = statusId,
-                MethodName = methodName,
-                ProjectId = projectId,
-                SessionId = sessionId,
-                StartTime = startTime,
-                EndTime = endTime,
-                Env = env,
-                Browser = browser,
-                AuthorId = authorId
-            });
+            long newlyAddedId;
+            using (var transaction = db.BeginTransaction())
+            { 
+                string insertSql = Utils.SqlLoader.Load("InsertTest.sql");
+                newlyAddedId = db.ExecuteScalar<long>(
+                    insertSql,
+                    new { Name = name, 
+                        StatusId = statusId,
+                        MethodName = methodName,
+                        ProjectId = projectId,
+                        SessionId = sessionId,
+                        StartTime = startTime,
+                        EndTime = endTime,
+                        Env = env,
+                        Browser = browser,
+                        AuthorId = authorId
+                    },
+                    transaction: transaction);
+                transaction.Commit();
+            }
             return newlyAddedId;
         }
 
@@ -56,18 +63,28 @@ namespace MySqlApp.Steps
 
         internal static void UpdateTestAuthor(IDbConnection db, long? newAuthorId, long targetTestId)
         {
-            string updateTestAuthorSql = Utils.SqlLoader.Load("UpdateTestAuthor.sql");
-            db.Execute(
-                updateTestAuthorSql,
-                new { NewAuthorId = newAuthorId, TargetTestId = targetTestId});
+            using (var transaction = db.BeginTransaction())
+            { 
+                string updateTestAuthorSql = Utils.SqlLoader.Load("UpdateTestAuthor.sql");
+                db.Execute(
+                    updateTestAuthorSql,
+                    new { NewAuthorId = newAuthorId, TargetTestId = targetTestId},
+                    transaction: transaction);
+                transaction.Commit();
+            }
         }
 
         internal static void DeleteTestById(IDbConnection db, long targetTestId)
         {
-            string deleteTestByIdSql = Utils.SqlLoader.Load("DeleteTestById.sql");
-            db.Execute(
-                deleteTestByIdSql,
-                new { TargetTestId = targetTestId });
+            using (var transaction = db.BeginTransaction()) 
+            { 
+                string deleteTestByIdSql = Utils.SqlLoader.Load("DeleteTestById.sql");
+                db.Execute(
+                    deleteTestByIdSql,
+                    new { TargetTestId = targetTestId },
+                    transaction: transaction);
+                transaction.Commit();
+            }
         }
 
         internal static bool CheckTestExists(IDbConnection db, long id)
