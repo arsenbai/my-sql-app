@@ -4,6 +4,7 @@ using MySqlApp.Models;
 using MySqlApp.Steps;
 using NUnit.Framework;
 using System.Data;
+using MySqlApp.Utils;
 
 namespace MySqlApp.Tests
 {
@@ -16,7 +17,6 @@ namespace MySqlApp.Tests
         private IDbConnection _db = null!;
 
         // new author
-        private long _newAuthorId;
         private string _newAuthorName = null!;
         private string _newAuthorLogin = null!;
         private string _newAuthorEmail = null!;
@@ -56,7 +56,10 @@ namespace MySqlApp.Tests
         [Test]
         public void Scenario_One() 
         {
-            ScenarioOneSteps.SelectTestsPerformedOnChrome_ThenReplaceAuthorWithCreatedInPrecondition(_db, _newAuthorLogin, _newAuthorId, _browserChrome);
+            ScenarioOneSteps.SelectTestsPerformedOnChrome_ThenReplaceAuthorWithCreatedInPrecondition(
+                _db, 
+                _newAuthorLogin, 
+                _browserChrome);
             ScenarioOneSteps.SelectTestsPerformedOnFirefox_ThenCopyContentsWithSafariBrowser_AddNewTestsToDb(
                 _db, 
                 _browserFirefox, 
@@ -73,10 +76,10 @@ namespace MySqlApp.Tests
         public void OneTimeTearDown()
         {
             // POSTCONDITION delete the created author, check that it has been deleted
-            AuthorRepository.DeleteAuthorById(_db, _newAuthorId);
+            AuthorRepository.DeleteAuthorById(_db, SharedTestState.NewAuthorId);
             Assert.That(
-                !AuthorRepository.CheckAuthorExists(_db, _newAuthorId),
-                $"the created author has NOT been deleted: author_id={_newAuthorId}"
+                !AuthorRepository.CheckAuthorExists(_db, SharedTestState.NewAuthorId),
+                $"the created author has NOT been deleted: author_id={SharedTestState.NewAuthorId}"
                 );
             if (_db.State == ConnectionState.Open)
             {

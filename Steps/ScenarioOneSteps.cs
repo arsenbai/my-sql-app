@@ -1,5 +1,6 @@
 ﻿using MySqlApp.Data.Repositories;
 using MySqlApp.Models;
+using MySqlApp.Utils;
 using NUnit.Framework;
 using System.Data;
 
@@ -9,23 +10,26 @@ namespace MySqlApp.Steps
     {
 
 
-
-
-
         /* STEP
          * Select all the tests performed on the Chrome browser 
          * and replace the author with the one created in the preconditions.
          */
-        internal static void SelectTestsPerformedOnChrome_ThenReplaceAuthorWithCreatedInPrecondition(IDbConnection db, string newAuthorLogin, long newAuthorId, string browserChrome)
+        internal static void SelectTestsPerformedOnChrome_ThenReplaceAuthorWithCreatedInPrecondition(
+            IDbConnection db, 
+            string newAuthorLogin, 
+            string browserChrome)
         {
             // Select all the tests performed on the Chrome browser 
             List<Test> testsWithOldAuthor = TestRepository.GetListOfTestsByBrowser(db, browserChrome);
 
             // Replace the author with the one created in the preconditions.
-            newAuthorId = AuthorRepository.GetAuthorByLogin(db, newAuthorLogin)!.Id;
+            SharedTestState.NewAuthorId = AuthorRepository.GetAuthorByLogin(db, newAuthorLogin)!.Id;
             foreach (var testItemWithOldAuthor in testsWithOldAuthor)
             {
-                TestRepository.UpdateTestAuthor(db, newAuthorId, testItemWithOldAuthor.Id);
+                TestRepository.UpdateTestAuthor(
+                    db,
+                    SharedTestState.NewAuthorId, 
+                    testItemWithOldAuthor.Id);
             }
 
             // Check EXPECTED RESULT - Author has been replaced
@@ -33,7 +37,7 @@ namespace MySqlApp.Steps
             List<bool> conditionsToCheckAuthorReplacement = new List<bool>();
             foreach (var testItemWithExpectedNewAuthor in testsWithExpectedNewAuthor)
             {
-                conditionsToCheckAuthorReplacement.Add(testItemWithExpectedNewAuthor.AuthorId.Equals(newAuthorId));
+                conditionsToCheckAuthorReplacement.Add(testItemWithExpectedNewAuthor.AuthorId.Equals(SharedTestState.NewAuthorId));
             }
             Assert.That(conditionsToCheckAuthorReplacement.All(b => b), "Author has NOT been replaced.");
         }
