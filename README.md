@@ -29,6 +29,14 @@ cd my-sql-app
 ```
 
 ### Step 1: Restore dependencies
+Go to Data/Connection/ConnectionToDb.cs
+Change the following for your setting:
+```csharp
+string SERVER_NAME = "CMDB-224899";
+string DB_NAME = "TestDb";
+```
+
+### Step 1: Restore dependencies
 Restore NuGet packages:
 ```bash
 dotnet restore
@@ -38,9 +46,6 @@ dotnet restore
 Create a SQL Server database named:
 `TestDb`
 
-#### ✅ Optional:
-You may use a different database name, but if you do, make sure to update the connection string in:
-`Properties/launchSettings.json`
 
 ### Step 3: Initialize the database schema
 Run the SQL script provided with the assignment to:
@@ -50,6 +55,7 @@ You can execute the script using:
 - SQL Server Management Studio (SSMS)
 
 ### ✅ What This Project Covers
+- Using NUnit Framework
 - Using Dapper for data access
 - Executing raw SQL queries
 - Mapping query results to C# models
