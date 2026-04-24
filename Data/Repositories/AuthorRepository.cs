@@ -1,12 +1,7 @@
 ﻿using Dapper;
-using Microsoft.Data.SqlClient;
-using MySqlApp.Data;
 using MySqlApp.Models;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Text;
 
 namespace MySqlApp.Data.Repositories
 {
@@ -16,15 +11,11 @@ namespace MySqlApp.Data.Repositories
         {
             using (var transaction = db.BeginTransaction())
             {
-
-                TestContext.Progress.WriteLine($"---db.State: {db.State.ToString()}");
-
                 string insertSql = Utils.SqlLoader.Load("InsertAuthor.sql");
                 var rowsAffected = db.Execute(
                     insertSql,
                     param: new { Name = newAuthorName, Login = newAuthorLogin, Email = newAuthorEmail},
                     transaction: transaction);
-                TestContext.Progress.WriteLine($"{rowsAffected} rows inserted.");
                 try
                 {
                     transaction.Commit();
