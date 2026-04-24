@@ -3,6 +3,7 @@
 //using System.Text;
 
 using Microsoft.Data.SqlClient;
+using NUnit.Framework;
 using System.Data;
 
 namespace MySqlApp.Data.Connection
@@ -29,7 +30,7 @@ namespace MySqlApp.Data.Connection
             }
 
             _connectionString = $"Server={SERVER_NAME};Database={DB_NAME};Trusted_Connection=True;TrustServerCertificate=True;";
-            Console.WriteLine(">>>Start connecting to database..");
+            TestContext.Progress.WriteLine(">>>Start connecting to database..");
         }
 
         public static ConnectionToDb Instance

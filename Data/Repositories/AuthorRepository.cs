@@ -2,43 +2,56 @@
 using Microsoft.Data.SqlClient;
 using MySqlApp.Data;
 using MySqlApp.Models;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace MySqlApp.Steps
+namespace MySqlApp.Data.Repositories
 {
-    internal class AuthorSteps
+    internal class AuthorRepository
     {
         internal static void InsertAuthor(IDbConnection db, string newAuthorName, string newAuthorLogin, string newAuthorEmail)
         {
             using (var transaction = db.BeginTransaction())
-            { 
+            {
+
+                TestContext.Progress.WriteLine($"---db.State: {db.State.ToString()}");
+
                 string insertSql = Utils.SqlLoader.Load("InsertAuthor.sql");
                 var rowsAffected = db.Execute(
                     insertSql,
-                    new { Name = newAuthorName, Login = newAuthorLogin, Email = newAuthorEmail},
+                    param: new { Name = newAuthorName, Login = newAuthorLogin, Email = newAuthorEmail},
                     transaction: transaction);
-                transaction.Commit();
-                Console.WriteLine($"{rowsAffected} rows inserted.");
+                TestContext.Progress.WriteLine($"{rowsAffected} rows inserted.");
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+
             }
         }
 
         internal static Author? GetAuthorById(IDbConnection db, long id)
         {
-            string getAuthorByIdSql = Utils.SqlLoader.Load("GetAuthorById.sql");
+                string getAuthorByIdSql = Utils.SqlLoader.Load("GetAuthorById.sql");
             return db.QuerySingleOrDefault<Author>(
                 getAuthorByIdSql,
-                new { Id = id});
+                param: new { Id = id});
         }
 
         internal static Author? GetAuthorByLogin(IDbConnection db, string login)
         {
             string getAuthorByLoginSql = Utils.SqlLoader.Load("GetAuthorByLogin.sql");
             return db.QueryFirstOrDefault<Author>(
-                getAuthorByLoginSql, 
-                new { Login = login });
+                getAuthorByLoginSql,
+                param: new { Login = login });
         }
 
         internal static void DeleteAuthorById(IDbConnection db, long targetAuthorId)
@@ -48,9 +61,17 @@ namespace MySqlApp.Steps
                 string deleteAuthorByIdSql = Utils.SqlLoader.Load("DeleteAuthorById.sql");
                 db.Execute(
                     deleteAuthorByIdSql,
-                    new { TargetAuthorId = targetAuthorId },
+                    param: new { TargetAuthorId = targetAuthorId },
                     transaction: transaction);
-                transaction.Commit();
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
 

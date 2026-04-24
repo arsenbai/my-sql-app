@@ -6,9 +6,9 @@ using System.Data;
 using System.Text;
 using System.Transactions;
 
-namespace MySqlApp.Steps
+namespace MySqlApp.Data.Repositories
 {
-    internal class TestSteps
+    internal class TestRepository
     {
         internal static long InsertTestAndReturnTestId(IDbConnection db,
                                         string name,
@@ -28,7 +28,7 @@ namespace MySqlApp.Steps
                 string insertSql = Utils.SqlLoader.Load("InsertTest.sql");
                 newlyAddedId = db.ExecuteScalar<long>(
                     insertSql,
-                    new { Name = name, 
+                    param: new { Name = name, 
                         StatusId = statusId,
                         MethodName = methodName,
                         ProjectId = projectId,
@@ -50,7 +50,7 @@ namespace MySqlApp.Steps
             string getTestByIdSql = Utils.SqlLoader.Load("GetTestById.sql");
             return db.QuerySingleOrDefault<Test>(
                 getTestByIdSql,
-                new { Id = id });
+                param: new { Id = id });
         }
 
         internal static List<Test> GetListOfTestsByBrowser(IDbConnection db, string browser)
@@ -68,7 +68,7 @@ namespace MySqlApp.Steps
                 string updateTestAuthorSql = Utils.SqlLoader.Load("UpdateTestAuthor.sql");
                 db.Execute(
                     updateTestAuthorSql,
-                    new { NewAuthorId = newAuthorId, TargetTestId = targetTestId},
+                    param: new { NewAuthorId = newAuthorId, TargetTestId = targetTestId},
                     transaction: transaction);
                 transaction.Commit();
             }
