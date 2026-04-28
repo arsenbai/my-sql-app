@@ -12,7 +12,6 @@ namespace MySqlApp.Data.Connection
 
         private ConnectionToDb()
         {
-            // --- CONFIGURATION ---
             string SERVER_NAME = "CMDB-224899";
             string DB_NAME = "TestDb";
 

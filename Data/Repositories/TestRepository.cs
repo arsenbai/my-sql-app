@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MySqlApp.Data.Enums;
 using MySqlApp.Models;
 using System.Data;
 
@@ -36,7 +37,15 @@ namespace MySqlApp.Data.Repositories
                         AuthorId = authorId
                     },
                     transaction: transaction);
-                transaction.Commit();
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
             return newlyAddedId;
         }
@@ -49,12 +58,20 @@ namespace MySqlApp.Data.Repositories
                 param: new { Id = id });
         }
 
-        internal static List<Test> GetListOfTestsByBrowser(IDbConnection db, string browser)
+        internal static List<Test> GetListOfTestsByStatus(IDbConnection db, Status status)
+        {
+            string getTestByStatusSql = Utils.SqlLoader.Load("GetTestByStatus.sql");
+            return db.Query<Test>(
+                getTestByStatusSql,
+                new { StatusId = (int) status}).ToList();
+        }
+
+        internal static List<Test> GetListOfTestsByBrowser(IDbConnection db, BrowserType browser)
         {
             string getTestByBrowserSql = Utils.SqlLoader.Load("GetTestByBrowser.sql");
             return db.Query<Test>(
                 getTestByBrowserSql,
-                new { Browser = browser }).ToList();
+                new { Browser = browser.ToString() }).ToList();
         }
 
         internal static void UpdateTestAuthor(IDbConnection db, long? newAuthorId, long targetTestId)
@@ -66,7 +83,78 @@ namespace MySqlApp.Data.Repositories
                     updateTestAuthorSql,
                     param: new { NewAuthorId = newAuthorId, TargetTestId = targetTestId},
                     transaction: transaction);
-                transaction.Commit();
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        internal static void UpdateTestProject(IDbConnection db, long? newProjectId, long targetTestId)
+        {
+            using (var transaction = db.BeginTransaction())
+            {
+                string updateTestProjectSql = Utils.SqlLoader.Load("UpdateTestProject.sql");
+                db.Execute(
+                    updateTestProjectSql,
+                    param: new { NewProjectId = newProjectId, TargetTestId = targetTestId},
+                    transaction: transaction);
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        internal static void UpdateTestEnv(IDbConnection db, string env, long targetTestId)
+        {
+            using (var transaction = db.BeginTransaction())
+            {
+                string updateTestEnvSql = Utils.SqlLoader.Load("UpdateTestEnv.sql");
+                db.Execute(
+                    updateTestEnvSql,
+                    param: new { Env = env, TargetTestId = targetTestId},
+                    transaction: transaction);
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        internal static void UpdateTestStatus(IDbConnection db, Status newStatus, long targetTestId)
+        {
+            using (var transaction = db.BeginTransaction())
+            {
+                string updateTestStatus = Utils.SqlLoader.Load("UpdateTestStatus.sql");
+                db.Execute(
+                    updateTestStatus,
+                    param: new { NewStatusId = (int) newStatus, TargetTestId = targetTestId},
+                    transaction: transaction);
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
 
@@ -79,7 +167,15 @@ namespace MySqlApp.Data.Repositories
                     deleteTestByIdSql,
                     new { TargetTestId = targetTestId },
                     transaction: transaction);
-                transaction.Commit();
+                try
+                {
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
 

@@ -1,8 +1,6 @@
 ﻿
 namespace MySqlApp.Models
 {
-    // --- THE MODEL ---
-    // This class matches the 'dbo.author' table
     internal class Author
     {
         public long Id { get; set; }

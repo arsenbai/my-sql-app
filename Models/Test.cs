@@ -1,7 +1,5 @@
 ﻿namespace MySqlApp.Models
 {
-    // --- THE MODEL ---
-    // This class matches the 'dbo.test' table
     internal class Test
     {
         public long Id { get; set; }

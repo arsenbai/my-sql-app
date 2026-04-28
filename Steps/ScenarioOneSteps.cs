@@ -1,172 +1,157 @@
-﻿using MySqlApp.Data.Repositories;
+﻿using MySqlApp.Data.Enums;
+using MySqlApp.Data.Repositories;
 using MySqlApp.Models;
-using MySqlApp.Utils;
 using NUnit.Framework;
 using System.Data;
 
 namespace MySqlApp.Steps
 {
-    internal class ScenarioOneSteps
+    public class ScenarioOneSteps
     {
+        public IDbConnection Db { get; }
+        public long NewAuthorId { get; set; }
 
-
-        /* STEP
-         * Select all the tests performed on the Chrome browser 
-         * and replace the author with the one created in the preconditions.
-         */
-        internal static void SelectTestsPerformedOnChrome_ThenReplaceAuthorWithCreatedInPrecondition(
-            IDbConnection db, 
-            string newAuthorLogin, 
-            string browserChrome)
+        public ScenarioOneSteps(IDbConnection db)
         {
-            // Select all the tests performed on the Chrome browser 
-            List<Test> testsWithOldAuthor = TestRepository.GetListOfTestsByBrowser(db, browserChrome);
+            Db = db;
+        }
 
-            // Replace the author with the one created in the preconditions.
-            SharedTestState.NewAuthorId = AuthorRepository.GetAuthorByLogin(db, newAuthorLogin)!.Id;
+        internal void ReplaceAuthorForBrowserTests(BrowserType browser, string newAuthorLogin)
+        {
+            List<Test> testsWithOldAuthor = TestRepository.GetListOfTestsByBrowser(Db, browser);
+
+            NewAuthorId = AuthorRepository.GetAuthorByLogin(Db, newAuthorLogin)!.Id;
             foreach (var testItemWithOldAuthor in testsWithOldAuthor)
             {
-                TestRepository.UpdateTestAuthor(
-                    db,
-                    SharedTestState.NewAuthorId, 
-                    testItemWithOldAuthor.Id);
+                TestRepository.UpdateTestAuthor(Db, NewAuthorId, testItemWithOldAuthor.Id);
             }
 
-            // Check EXPECTED RESULT - Author has been replaced
-            List<Test> testsWithExpectedNewAuthor = TestRepository.GetListOfTestsByBrowser(db, browserChrome);
+            List<Test> testsWithNewAuthor = TestRepository.GetListOfTestsByBrowser(Db, browser);
             List<bool> conditionsToCheckAuthorReplacement = new List<bool>();
-            foreach (var testItemWithExpectedNewAuthor in testsWithExpectedNewAuthor)
+            foreach (var testItem in testsWithNewAuthor)
             {
-                conditionsToCheckAuthorReplacement.Add(testItemWithExpectedNewAuthor.AuthorId.Equals(SharedTestState.NewAuthorId));
+                conditionsToCheckAuthorReplacement.Add(testItem.AuthorId.Equals(NewAuthorId));
             }
             Assert.That(conditionsToCheckAuthorReplacement.All(b => b), "Author has NOT been replaced.");
         }
 
-        /* STEP
-         * Select all tests performed on Firefox, 
-         * copy their contents excluding ‘ID’ and ‘browser’.
-         * Add new tests with this content to the database. Browser - Safari
-         */
-        internal static void SelectTestsPerformedOnFirefox_ThenCopyContentsWithSafariBrowser_AddNewTestsToDb(
-            IDbConnection db, 
-            string browserFirefox, 
-            string browserSafari, 
-            List<long> idsNewlyAddedTests, 
-            List<Test> newlyAddedTests)
+        internal List<long> CloneTestsToBrowser(
+            BrowserType browserOfOriginalTests,
+            BrowserType browserOfCopyTests)
         {
-            // Select all the tests performed on the Firefox browser 
-            List<Test> testsWithFirefox = TestRepository.GetListOfTestsByBrowser(db, browserFirefox);
+            List<long> idsNewlyAddedTests = new List<long>();
+            List<Test> originalTests = TestRepository.GetListOfTestsByBrowser(Db, browserOfOriginalTests);
 
-            // copy their contents excluding ‘ID’ and ‘browser’.
-            // Add new tests with this content to the database. Browser - Safari
-            foreach (var item in testsWithFirefox)
+            foreach (var itemOriginalTest in originalTests)
             {
                 idsNewlyAddedTests.Add(
-                    TestRepository.InsertTestAndReturnTestId(db,
-                                        item.Name,
-                                        item.StatusId,
-                                        item.MethodName,
-                                        item.ProjectId,
-                                        item.SessionId,
-                                        item.StartTime,
-                                        item.EndTime,
-                                        item.Env,
-                                        browserSafari,
-                                        item.AuthorId
-                                        )
+                    TestRepository.InsertTestAndReturnTestId(Db,
+                                        itemOriginalTest.Name,
+                                        itemOriginalTest.StatusId,
+                                        itemOriginalTest.MethodName,
+                                        itemOriginalTest.ProjectId,
+                                        itemOriginalTest.SessionId,
+                                        itemOriginalTest.StartTime,
+                                        itemOriginalTest.EndTime,
+                                        itemOriginalTest.Env,
+                                        browserOfCopyTests.ToString(),
+                                        itemOriginalTest.AuthorId)
                     );
             }
 
-            // Check EXPECTED RESULT - New tests for Safari have been added, their contents match the tests for Firefox
+            List<Test> newlyAddedTests = new List<Test>();
 
             foreach (var idItem in idsNewlyAddedTests)
             {
                 newlyAddedTests.Add(
-                    TestRepository.GetTestById(db, idItem)!
+                    TestRepository.GetTestById(Db, idItem)!
                     );
             }
 
-            List<bool> conditionsForNewSafariTests = new List<bool>();
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.Name).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.Name))
+            List<bool> conditions = new List<bool>();
+            conditions.Add(
+                newlyAddedTests.Select(t => t.Name).ToHashSet().SetEquals(originalTests.Select(t => t.Name))
                 );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.StatusId).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.StatusId))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.StatusId).ToHashSet().SetEquals(originalTests.Select(t => t.StatusId))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.MethodName).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.MethodName))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.MethodName).ToHashSet().SetEquals(originalTests.Select(t => t.MethodName))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.ProjectId).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.ProjectId))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.ProjectId).ToHashSet().SetEquals(originalTests.Select(t => t.ProjectId))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.SessionId).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.SessionId))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.SessionId).ToHashSet().SetEquals(originalTests.Select(t => t.SessionId))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.StartTime).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.StartTime))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.StartTime).ToHashSet().SetEquals(originalTests.Select(t => t.StartTime))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.EndTime).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.EndTime))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.EndTime).ToHashSet().SetEquals(originalTests.Select(t => t.EndTime))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.Env).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.Env))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.Env).ToHashSet().SetEquals(originalTests.Select(t => t.Env))
             );
-            conditionsForNewSafariTests.Add(
-                newlyAddedTests.Select(t => t.AuthorId).ToHashSet().SetEquals(testsWithFirefox.Select(t => t.AuthorId))
+            conditions.Add(
+                newlyAddedTests.Select(t => t.AuthorId).ToHashSet().SetEquals(originalTests.Select(t => t.AuthorId))
             );
 
-            Assert.That(conditionsForNewSafariTests.All(b => b),
-                "New tests for Safari have NOT been added AND/OR their contents DO NOT match the tests for Firefox");
+            Assert.That(conditions.All(b => b),
+                $"New tests for {browserOfCopyTests.ToString()} have NOT been added AND/OR their contents DO NOT match the tests for {browserOfOriginalTests.ToString()}");
+
+            return idsNewlyAddedTests;
         }
 
-        /* STEP
-         * For each of the added Safari tests, change the author to Null
-         */
-        internal static void ChangeAuthorToNullForAllNewlyAddedSafariTest(IDbConnection db, List<long> idsNewlyAddedTests)
+        internal void SetAuthorNull(List<long> idsNewlyAddedTests)
         {
-            foreach (var _idItem in idsNewlyAddedTests)
+            foreach (var idOfNewTest in idsNewlyAddedTests)
             {
-                TestRepository.UpdateTestAuthor(db, null, _idItem);
+                TestRepository.UpdateTestAuthor(Db, null, idOfNewTest);
             }
 
-            // Check EXPECTED RESULT - Author has been changed
             bool authorIsChanged = true;
-            foreach (var _idItem in idsNewlyAddedTests)
+            foreach (var idOfNewTest in idsNewlyAddedTests)
             {
-                if (TestRepository.GetTestById(db, _idItem)!.AuthorId is not null)
+                if (TestRepository.GetTestById(Db, idOfNewTest)!.AuthorId is not null)
                 {
                     authorIsChanged = false;
                     break;
                 }
             }
-            Assert.That(authorIsChanged, "Author has NOT been changed to NULL for the newly added Safari tests.");
+            Assert.That(authorIsChanged, "Author has NOT been changed to null for the newly added tests.");
         }
 
-        /* STEP
-         * Delete from the database all Safari tests whose author is null
-         */
-        internal static void DeleteAllSafariTestWithAuthorNull(IDbConnection db, string browserSafari)
+        internal void DeleteBrowserTestsWhereAuthorIsNull(BrowserType targetBrowser)
         {
-            List<Test> safariTests = TestRepository.GetListOfTestsByBrowser(db, browserSafari);
-            foreach (var testItem in safariTests)
+            List<Test> filteredTests = TestRepository.GetListOfTestsByBrowser(Db, targetBrowser);
+            foreach (var targetTest in filteredTests)
             {
-                if (testItem.AuthorId is null)
+                if (targetTest.AuthorId is null)
                 {
-                    TestRepository.DeleteTestById(db, testItem.Id);
+                    TestRepository.DeleteTestById(Db, targetTest.Id);
                 }
             }
 
-            // Check EXPECTED RESULT - Safari tests whose author is null have been deleted
-            bool safariTestsWithAuthorNullIsDeleted = true;
-            foreach (var itemToCheck in safariTests)
+            bool targetTestsAreDeleted = true;
+            foreach (var testToCheck in filteredTests)
             {
-                if (TestRepository.CheckTestExists(db, itemToCheck.Id))
+                if (TestRepository.CheckTestExists(Db, testToCheck.Id))
                 {
-                    safariTestsWithAuthorNullIsDeleted = false;
+                    targetTestsAreDeleted = false;
                     break;
                 }
             }
-            Assert.That(safariTestsWithAuthorNullIsDeleted, "Safari tests whose author is null have NOT been deleted.");
+            Assert.That(targetTestsAreDeleted, $"{targetBrowser.ToString()} tests where author is null have NOT been deleted.");
+        }
+
+        internal void DeleteNewAuthor()
+        {
+            AuthorRepository.DeleteAuthorById(Db, NewAuthorId);
+            Assert.That(
+                !AuthorRepository.CheckAuthorExists(Db, NewAuthorId),
+                $"the created author has NOT been deleted: author_id={NewAuthorId}"
+                );
         }
 
 

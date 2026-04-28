@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using MySqlApp.Models;
-using NUnit.Framework;
 using System.Data;
 
 namespace MySqlApp.Data.Repositories
