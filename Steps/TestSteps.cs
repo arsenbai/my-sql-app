@@ -6,33 +6,110 @@ using System.Data;
 
 namespace MySqlApp.Steps
 {
-    public class ScenarioOneSteps
+    public class TestSteps
     {
-        public IDbConnection Db { get; }
-        public long NewAuthorId { get; set; }
+        private IDbConnection _db { get; }
+        private readonly string _newEnv = "ARSEN_BAISEUPOV";
 
-        public ScenarioOneSteps(IDbConnection db)
+        public TestSteps(IDbConnection db)
         {
-            Db = db;
+            _db = db;
         }
 
-        internal void ReplaceAuthorForBrowserTests(BrowserType browser, string newAuthorLogin)
+        internal void ReplaceAuthorForBrowserTests(BrowserType browser, long newAuthorId)
         {
-            List<Test> testsWithOldAuthor = TestRepository.GetListOfTestsByBrowser(Db, browser);
+            List<Test> testsWithOldAuthor = TestRepository.GetListOfTestsByBrowser(_db, browser);
 
-            NewAuthorId = AuthorRepository.GetAuthorByLogin(Db, newAuthorLogin)!.Id;
             foreach (var testItemWithOldAuthor in testsWithOldAuthor)
             {
-                TestRepository.UpdateTestAuthor(Db, NewAuthorId, testItemWithOldAuthor.Id);
+                TestRepository.UpdateTestAuthor(_db, newAuthorId, testItemWithOldAuthor.Id);
             }
 
-            List<Test> testsWithNewAuthor = TestRepository.GetListOfTestsByBrowser(Db, browser);
+            List<Test> testsWithNewAuthor = TestRepository.GetListOfTestsByBrowser(_db, browser);
             List<bool> conditionsToCheckAuthorReplacement = new List<bool>();
             foreach (var testItem in testsWithNewAuthor)
             {
-                conditionsToCheckAuthorReplacement.Add(testItem.AuthorId.Equals(NewAuthorId));
+                conditionsToCheckAuthorReplacement.Add(testItem.AuthorId.Equals(newAuthorId));
             }
             Assert.That(conditionsToCheckAuthorReplacement.All(b => b), "Author has NOT been replaced.");
+        }
+
+        internal List<long> CloneTestsWithNewAuthorAndNewProject(
+                                                    BrowserType browser,
+                                                    long newAuthorId,
+                                                    long newProjectId)
+        {
+            List<long> idsOfClonedTests = new List<long>();
+            List<Test> originalTests = TestRepository.GetListOfTestsByBrowser(_db, browser);
+
+            foreach (var itemOriginalTest in originalTests)
+            {
+                idsOfClonedTests.Add(
+                    TestRepository.InsertTestAndReturnTestId(
+                        _db,
+                        itemOriginalTest.Name,
+                        itemOriginalTest.StatusId,
+                        itemOriginalTest.MethodName,
+                        newProjectId,
+                        itemOriginalTest.SessionId,
+                        itemOriginalTest.StartTime,
+                        itemOriginalTest.EndTime,
+                        itemOriginalTest.Env,
+                        itemOriginalTest.Browser,
+                        newAuthorId)
+                    );
+            }
+
+
+            bool newTestsAreAdded = true;
+            bool authorAndProjectAreReplaced = true;
+            foreach (var idOfClonedTest in idsOfClonedTests)
+            {
+                if (TestRepository.CheckTestExists(_db, idOfClonedTest))
+                {
+                    Test? clonedTest = TestRepository.GetTestById(_db, idOfClonedTest);
+                    if (clonedTest!.AuthorId == newAuthorId && clonedTest.ProjectId == newProjectId)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        authorAndProjectAreReplaced = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    newTestsAreAdded = false;
+                    break;
+                }
+            }
+            Assert.That(newTestsAreAdded, "New tests have NOT been added.");
+            Assert.That(authorAndProjectAreReplaced, "Author and project have NOT been replaced.");
+            return idsOfClonedTests;
+        }
+
+        internal void ReplaceEnvironmentForClonedTest(List<long> idsOfClonedTests)
+        {
+            foreach (var idOfClonedTest in idsOfClonedTests)
+            {
+                TestRepository.UpdateTestEnv(_db, _newEnv, idOfClonedTest);
+            }
+        }
+
+        internal void ReplaceStatusForAllTests(Status originalStatus, Status newStatus)
+        {
+            List<long> idsOfTestsWithOriginalStatus = TestRepository.GetListOfTestsByStatus(_db, originalStatus).Select(t => t.Id).ToList();
+            List<bool> conditions = new List<bool>();
+
+            foreach (var testId in idsOfTestsWithOriginalStatus)
+            {
+                TestRepository.UpdateTestStatus(_db, newStatus, testId);
+                conditions.Add(
+                    TestRepository.GetTestById(_db, testId)!.StatusId == (int)newStatus);
+            }
+
+            Assert.That(conditions.All(b => b), "Status was NOT changed.");
         }
 
         internal List<long> CloneTestsToBrowser(
@@ -40,12 +117,12 @@ namespace MySqlApp.Steps
             BrowserType browserOfCopyTests)
         {
             List<long> idsNewlyAddedTests = new List<long>();
-            List<Test> originalTests = TestRepository.GetListOfTestsByBrowser(Db, browserOfOriginalTests);
+            List<Test> originalTests = TestRepository.GetListOfTestsByBrowser(_db, browserOfOriginalTests);
 
             foreach (var itemOriginalTest in originalTests)
             {
                 idsNewlyAddedTests.Add(
-                    TestRepository.InsertTestAndReturnTestId(Db,
+                    TestRepository.InsertTestAndReturnTestId(_db,
                                         itemOriginalTest.Name,
                                         itemOriginalTest.StatusId,
                                         itemOriginalTest.MethodName,
@@ -64,7 +141,7 @@ namespace MySqlApp.Steps
             foreach (var idItem in idsNewlyAddedTests)
             {
                 newlyAddedTests.Add(
-                    TestRepository.GetTestById(Db, idItem)!
+                    TestRepository.GetTestById(_db, idItem)!
                     );
             }
 
@@ -107,13 +184,13 @@ namespace MySqlApp.Steps
         {
             foreach (var idOfNewTest in idsNewlyAddedTests)
             {
-                TestRepository.UpdateTestAuthor(Db, null, idOfNewTest);
+                TestRepository.UpdateTestAuthor(_db, null, idOfNewTest);
             }
 
             bool authorIsChanged = true;
             foreach (var idOfNewTest in idsNewlyAddedTests)
             {
-                if (TestRepository.GetTestById(Db, idOfNewTest)!.AuthorId is not null)
+                if (TestRepository.GetTestById(_db, idOfNewTest)!.AuthorId is not null)
                 {
                     authorIsChanged = false;
                     break;
@@ -124,19 +201,19 @@ namespace MySqlApp.Steps
 
         internal void DeleteBrowserTestsWhereAuthorIsNull(BrowserType targetBrowser)
         {
-            List<Test> filteredTests = TestRepository.GetListOfTestsByBrowser(Db, targetBrowser);
+            List<Test> filteredTests = TestRepository.GetListOfTestsByBrowser(_db, targetBrowser);
             foreach (var targetTest in filteredTests)
             {
                 if (targetTest.AuthorId is null)
                 {
-                    TestRepository.DeleteTestById(Db, targetTest.Id);
+                    TestRepository.DeleteTestById(_db, targetTest.Id);
                 }
             }
 
             bool targetTestsAreDeleted = true;
             foreach (var testToCheck in filteredTests)
             {
-                if (TestRepository.CheckTestExists(Db, testToCheck.Id))
+                if (TestRepository.CheckTestExists(_db, testToCheck.Id))
                 {
                     targetTestsAreDeleted = false;
                     break;
@@ -145,15 +222,13 @@ namespace MySqlApp.Steps
             Assert.That(targetTestsAreDeleted, $"{targetBrowser.ToString()} tests where author is null have NOT been deleted.");
         }
 
-        internal void DeleteNewAuthor()
+        internal void DeleteTestsByIds(List<long> idsOfTests)
         {
-            AuthorRepository.DeleteAuthorById(Db, NewAuthorId);
-            Assert.That(
-                !AuthorRepository.CheckAuthorExists(Db, NewAuthorId),
-                $"the created author has NOT been deleted: author_id={NewAuthorId}"
-                );
+            foreach (var testId in idsOfTests)
+            {
+                TestRepository.DeleteTestById(_db, testId);
+            }
         }
-
 
     }
 }

@@ -1,5 +1,4 @@
 ﻿using MySqlApp.Data.Enums;
-using MySqlApp.Data.Repositories;
 using MySqlApp.Models;
 using MySqlApp.Steps;
 using NUnit.Framework;
@@ -9,32 +8,29 @@ namespace MySqlApp.Tests
     [TestFixture]
     public class ScenarioOne : BaseTest
     {
-        private ScenarioOneSteps _steps = null!;
-        private string _newAuthorName = null!;
-        private string _newAuthorLogin = null!;
-        private string _newAuthorEmail = null!;
+        private AuthorSteps _authorSteps = null!;
+        private TestSteps _testSteps = null!;
+
+        
         private List<long>? _idsNewlyAddedTests;
+        
 
 
         [SetUp]
         public void SetUp()
         {
-            _steps = new ScenarioOneSteps(db);
-
-            string newAuthorGuid = $"{Guid.NewGuid():N}";
-            _newAuthorName = $"autotest_name_{newAuthorGuid}";
-            _newAuthorLogin = $"autotest_login_{newAuthorGuid}";
-            _newAuthorEmail = $"{_newAuthorLogin}@mail.com";
-            AuthorRepository.InsertAuthor(db, _newAuthorName, _newAuthorLogin, _newAuthorEmail);
+            _authorSteps = new AuthorSteps(db);
+            _testSteps = new TestSteps(db);
+            _authorSteps.CreateNewAuthor();
         }
 
         [Test]
-        public void Scenario_One() 
+        public void ScenarioOneTest() 
         {
-            _steps.ReplaceAuthorForBrowserTests(BrowserType.chrome, _newAuthorLogin);
-            _idsNewlyAddedTests = _steps.CloneTestsToBrowser(BrowserType.firefox, BrowserType.safari);
-            _steps.SetAuthorNull(_idsNewlyAddedTests);
-            _steps.DeleteBrowserTestsWhereAuthorIsNull(BrowserType.safari);
+            _testSteps.ReplaceAuthorForBrowserTests(BrowserType.chrome, _authorSteps.NewAuthorId);
+            _idsNewlyAddedTests = _testSteps.CloneTestsToBrowser(BrowserType.firefox, BrowserType.safari);
+            _testSteps.SetAuthorNull(_idsNewlyAddedTests);
+            _testSteps.DeleteBrowserTestsWhereAuthorIsNull(BrowserType.safari);
         }
 
 
@@ -42,7 +38,7 @@ namespace MySqlApp.Tests
         [TearDown]
         public void TearDown()
         {
-            _steps.DeleteNewAuthor();
+            _authorSteps.DeleteNewAuthor(_authorSteps.NewAuthorId);
         }
 
     }

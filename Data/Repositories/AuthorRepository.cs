@@ -6,12 +6,13 @@ namespace MySqlApp.Data.Repositories
 {
     internal class AuthorRepository
     {
-        internal static void InsertAuthor(IDbConnection db, string newAuthorName, string newAuthorLogin, string newAuthorEmail)
+        internal static long InsertAuthorAndReturnAuthorId(IDbConnection db, string newAuthorName, string newAuthorLogin, string newAuthorEmail)
         {
+            long newlyAddedId;
             using (var transaction = db.BeginTransaction())
             {
                 string insertSql = Utils.SqlLoader.Load("InsertAuthor.sql");
-                var rowsAffected = db.Execute(
+                newlyAddedId = db.ExecuteScalar<long>(
                     insertSql,
                     param: new { Name = newAuthorName, Login = newAuthorLogin, Email = newAuthorEmail},
                     transaction: transaction);
@@ -26,6 +27,7 @@ namespace MySqlApp.Data.Repositories
                 }
 
             }
+            return newlyAddedId;
         }
 
         internal static Author? GetAuthorById(IDbConnection db, long id)

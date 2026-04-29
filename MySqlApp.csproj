@@ -9,18 +9,28 @@
 
   <ItemGroup>
     <None Remove="Resources\DeleteAuthorById.sql" />
+    <None Remove="Resources\DeleteProjectById.sql" />
     <None Remove="Resources\DeleteTestById.sql" />
     <None Remove="Resources\GetAuthorById.sql" />
     <None Remove="Resources\GetAuthorByLogin.sql" />
+    <None Remove="Resources\GetProjectByName.sql" />
     <None Remove="Resources\GetTestByBrowser.sql" />
     <None Remove="Resources\GetTestById.sql" />
+    <None Remove="Resources\GetTestByStatus.sql" />
     <None Remove="Resources\InsertAuthor.sql" />
+    <None Remove="Resources\InsertProject.sql" />
     <None Remove="Resources\InsertTest.sql" />
     <None Remove="Resources\UpdateTestAuthor.sql" />
+    <None Remove="Resources\UpdateTestEnv.sql" />
+    <None Remove="Resources\UpdateTestProject.sql" />
+    <None Remove="Resources\UpdateTestStatus.sql" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Resources\DeleteAuthorById.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\DeleteProjectById.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\DeleteTestById.sql">
@@ -32,19 +42,37 @@
     <Content Include="Resources\GetAuthorByLogin.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\GetProjectByName.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\GetTestByBrowser.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\GetTestById.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\GetTestByStatus.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\InsertAuthor.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\InsertProject.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\InsertTest.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\UpdateTestAuthor.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\UpdateTestEnv.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\UpdateTestProject.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\UpdateTestStatus.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

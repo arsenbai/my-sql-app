@@ -7,12 +7,13 @@ namespace MySqlApp.Data.Repositories
 {
     internal class ProjectRepository
     {
-        internal static void InsertProject(IDbConnection db, string newProjectName)
+        internal static long InsertProjectAndReturnProjectId(IDbConnection db, string newProjectName)
         {
+            long newlyAddedId;
             using (var transaction = db.BeginTransaction())
             {
                 string insertSql = Utils.SqlLoader.Load("InsertProject.sql");
-                var rowsAffected = db.Execute(
+                newlyAddedId = db.ExecuteScalar<long>(
                     insertSql,
                     param: new { Name = newProjectName },
                     transaction: transaction);
@@ -25,6 +26,7 @@ namespace MySqlApp.Data.Repositories
                     transaction.Rollback();
                 }
             }
+            return newlyAddedId;
         }
 
         internal static Project? GetProjectByName(IDbConnection db, string name)
