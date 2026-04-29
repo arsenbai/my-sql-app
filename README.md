@@ -32,8 +32,8 @@ cd my-sql-app
 Go to Data/Connection/ConnectionToDb.cs
 Change the following for your setting:
 ```csharp
-string SERVER_NAME = "CMDB-224899";
-string DB_NAME = "TestDb";
+string SERVER_NAME = "_____";
+string DB_NAME = "_____";
 ```
 
 ### Step 1: Restore dependencies
@@ -50,9 +50,7 @@ Create a SQL Server database named:
 ### Step 3: Initialize the database schema
 Run the SQL script provided with the assignment to:
 - Create all required tables
-- Insert initial test data
-You can execute the script using:
-- SQL Server Management Studio (SSMS)
+
 
 ### ✅ What This Project Covers
 - Using NUnit Framework
