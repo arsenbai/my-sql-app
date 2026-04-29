@@ -16,6 +16,41 @@ namespace MySqlApp.Steps
             _db = db;
         }
 
+        private void AssertAllClonedTestsWithNewBrowserHaveIdenticalContentsWithOriginalTests(List<Test> clonedTests, List<Test> originalTests)
+        {
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    clonedTests.Select(t => t.Name).ToHashSet().SetEquals(originalTests.Select(t => t.Name)),
+                    "Test Names DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.StatusId).ToHashSet().SetEquals(originalTests.Select(t => t.StatusId)),
+                    "Test StatusIds DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.MethodName).ToHashSet().SetEquals(originalTests.Select(t => t.MethodName)),
+                    "Test MethodNames DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.ProjectId).ToHashSet().SetEquals(originalTests.Select(t => t.ProjectId)),
+                    "Test ProjectIds DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.SessionId).ToHashSet().SetEquals(originalTests.Select(t => t.SessionId)),
+                    "Test SessionIds DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.StartTime).ToHashSet().SetEquals(originalTests.Select(t => t.StartTime)),
+                    "Test StartTimes DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.EndTime).ToHashSet().SetEquals(originalTests.Select(t => t.EndTime)),
+                    "Test EndTimes DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.Env).ToHashSet().SetEquals(originalTests.Select(t => t.Env)),
+                    "Test Envs DO NOT match");
+                Assert.That(
+                    clonedTests.Select(t => t.AuthorId).ToHashSet().SetEquals(originalTests.Select(t => t.AuthorId)),
+                    "Test AuthorIds DO NOT match");
+            });
+        }
+
         internal void ReplaceAuthorForBrowserTests(BrowserType browser, long newAuthorId)
         {
             List<Test> testsWithOldAuthor = TestRepository.GetListOfTestsByBrowser(_db, browser);
@@ -145,37 +180,7 @@ namespace MySqlApp.Steps
                     );
             }
 
-            List<bool> conditions = new List<bool>();
-            conditions.Add(
-                newlyAddedTests.Select(t => t.Name).ToHashSet().SetEquals(originalTests.Select(t => t.Name))
-                );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.StatusId).ToHashSet().SetEquals(originalTests.Select(t => t.StatusId))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.MethodName).ToHashSet().SetEquals(originalTests.Select(t => t.MethodName))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.ProjectId).ToHashSet().SetEquals(originalTests.Select(t => t.ProjectId))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.SessionId).ToHashSet().SetEquals(originalTests.Select(t => t.SessionId))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.StartTime).ToHashSet().SetEquals(originalTests.Select(t => t.StartTime))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.EndTime).ToHashSet().SetEquals(originalTests.Select(t => t.EndTime))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.Env).ToHashSet().SetEquals(originalTests.Select(t => t.Env))
-            );
-            conditions.Add(
-                newlyAddedTests.Select(t => t.AuthorId).ToHashSet().SetEquals(originalTests.Select(t => t.AuthorId))
-            );
-
-            Assert.That(conditions.All(b => b),
-                $"New tests for {browserOfCopyTests.ToString()} have NOT been added AND/OR their contents DO NOT match the tests for {browserOfOriginalTests.ToString()}");
+            AssertAllClonedTestsWithNewBrowserHaveIdenticalContentsWithOriginalTests(newlyAddedTests, originalTests);
 
             return idsNewlyAddedTests;
         }
